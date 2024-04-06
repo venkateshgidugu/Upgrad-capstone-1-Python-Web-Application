@@ -36,8 +36,33 @@ pipeline {
         }
         stage('Deploying container to Kubernetes') {
            steps {
-                sh "helm install project-1 python-project --set appimage=${registry}:v${BUILD_NUMBER}"
+                #sh "helm install project-1 python-project --set appimage=${registry}:v${BUILD_NUMBER}"
+            #}
+        #}      
+    #}
+#}
+                def serviceExists = ""
+                   serviceExists = sh(script: "kubectl get services python-app -n default | grep python-app | awk '{ print \$1}'", returnStdout: true).trim()
+                    echo serviceExists 
+                    if (serviceExists == "python-app" ) {
+                         sh "echo 'Upgrading...'"
+                        sh "helm upgrade project-1 python-project --set appimage=${registry}:v${BUILD_NUMBER}"
+                    
+                    } else {
+                         sh "echo 'Installing...'"
+                         sh "helm install project-1 python-project --set appimage=${registry}:v${BUILD_NUMBER}"
+                        }
+               }
             }
-        }      
+        }    
+        stage('Monitoring with Prometheus & Grafana') {
+           steps {
+                sh "helm repo add prometheus-community https://prometheus-community.github.io/helm-charts"
+                sh "helm repo update"
+                sh "helm install my-kube-prometheus-stack prometheus-community/kube-prometheus-stack"
+            }
+        }
+        
+
     }
 }
