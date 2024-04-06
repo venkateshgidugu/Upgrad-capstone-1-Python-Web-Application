@@ -1,14 +1,14 @@
 pipeline {
     agent any
     environment {
-        registry = "venkatesheg12/python-app"
+        registry = "gowthamsammangi/upgrad-python1"
         registryCredential = 'dockerhub'
     }
 
     stages {
         stage('git checkout') {
             steps {
-                git branch: 'project-1', url: 'https://github.com/venkateshgidugu/upgrad-project1.git'
+                git branch: 'project-1', url: 'https://github.com/GOWTHAMSAMMANGI/Upgrad-Capstone-1-Python.git'
             }
         }
         
@@ -36,8 +36,29 @@ pipeline {
         }
         stage('Deploying container to Kubernetes') {
            steps {
-                sh "helm install project-1 python-project --set appimage=${registry}:v${BUILD_NUMBER}"
+               script {
+                    def serviceExists = ""
+                   serviceExists = sh(script: "kubectl get services python-app -n default | grep python-app | awk '{ print \$1}'", returnStdout: true).trim()
+                    echo serviceExists 
+                    if (serviceExists == "python-app" ) {
+                         sh "echo 'Upgrading...'"
+                        sh "helm upgrade project-1 python-project --set appimage=${registry}:v${BUILD_NUMBER}"
+                    
+                    } else {
+                         sh "echo 'Installing...'"
+                         sh "helm install project-1 python-project --set appimage=${registry}:v${BUILD_NUMBER}"
+                        }
+               }
             }
-        }      
+        }    
+        stage('Monitoring with Prometheus & Grafana') {
+           steps {
+                sh "helm repo add prometheus-community https://prometheus-community.github.io/helm-charts"
+                sh "helm repo update"
+                sh "helm install my-kube-prometheus-stack prometheus-community/kube-prometheus-stack"
+            }
+        }
+        
+
     }
 }
