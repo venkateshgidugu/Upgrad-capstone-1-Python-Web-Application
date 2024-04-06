@@ -1,14 +1,14 @@
 pipeline {
     agent any
     environment {
-        registry = "gowthamsammangi/upgrad-python1"
+        registry = "venkatesheg12/upgrad-python1"
         registryCredential = 'dockerhub'
     }
 
     stages {
         stage('git checkout') {
             steps {
-                git branch: 'project-1', url: 'https://github.com/GOWTHAMSAMMANGI/Upgrad-Capstone-1-Python.git'
+                git branch: 'project-1', url: 'https://github.com/venkateshgidugu/upgrad-project1.git'
             }
         }
         
@@ -36,8 +36,17 @@ pipeline {
         }
         stage('Deploying container to Kubernetes') {
            steps {
+<<<<<<< HEAD
                script {
                     def serviceExists = ""
+=======
+                #sh "helm install project-1 python-project --set appimage=${registry}:v${BUILD_NUMBER}"
+            #}
+        #}      
+    #}
+#}
+                def serviceExists = ""
+>>>>>>> 132f36adad2218083652842e228ee741735fe4de
                    serviceExists = sh(script: "kubectl get services python-app -n default | grep python-app | awk '{ print \$1}'", returnStdout: true).trim()
                     echo serviceExists 
                     if (serviceExists == "python-app" ) {
